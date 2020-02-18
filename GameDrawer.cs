@@ -60,6 +60,22 @@ namespace BattleshipSolver
             }
         }
 
+        internal void DrawMove(Graphics g, Solution result)
+        {
+            //if (!result.CellOfInterest.IsUnused)
+            //{
+            //    DrawSymbol(g, _game.CellContents(result.CellOfInterest.Column, result.CellOfInterest.Row), result.CellOfInterest.Column, result.CellOfInterest.Row, Brushes.Blue);
+            //}
+
+            //foreach (var cell in result.SolvedCells)
+            //{
+            //    DrawSymbol(g, _game.CellContents(cell.Column, cell.Row), cell.Column, cell.Row, Brushes.Red);
+            //}
+
+            g.DrawString(result.Description, _infoFont, Brushes.Black, (_game.NumberOfColumns + 1) * CellSize, 0);
+
+        }
+
         private void DrawSymbol(Graphics g, CellType symbol, int column, int row, Brush brush)
         {
             var x = column * CellSize;
@@ -95,6 +111,12 @@ namespace BattleshipSolver
                     break;
                 case CellType.UnknownBoatPart:
                     DrawLetter(g, brush, x, y, "?");
+                    break;
+                case CellType.UnknownHorizontalBoatPart:
+                    DrawLetter(g, brush, x, y, "?H");
+                    break;
+                case CellType.UnknownVerticalBoatPart:
+                    DrawLetter(g, brush, x, y, "?V");
                     break;
                 default:
                     break;

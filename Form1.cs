@@ -32,9 +32,6 @@ namespace BattleshipSolver
 
         private void SolveButton_Click(object sender, EventArgs e)
         {
-            using var g = this.CreateGraphics();
-            g.Clear(this.BackColor);
-            _gameDrawer.Draw(g);
             var result = _game.Solve();
 
             if (result is null)
@@ -43,7 +40,10 @@ namespace BattleshipSolver
             }
             else
             {
-             //   _gameDrawer.DrawMove(g, result);
+                using var g = this.CreateGraphics();
+                g.Clear(this.BackColor);
+                _gameDrawer.Draw(g);
+                _gameDrawer.DrawMove(g, result);
             }
         }
 
