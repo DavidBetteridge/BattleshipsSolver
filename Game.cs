@@ -1,4 +1,7 @@
-﻿namespace BattleshipSolver
+﻿using System;
+using System.Collections.Generic;
+
+namespace BattleshipSolver
 {
     public class Game
     {
@@ -8,8 +11,8 @@
 
         public enum CellType
         {
-            Unknown = 0,            
-            Water = 1,              
+            Unknown = 0,
+            Water = 1,
             SouthEnd = 2,
             NorthEnd = 3,
             WestEnd = 4,
@@ -36,9 +39,71 @@
         internal int RowCount(int rowNumber) => _rowCounts[rowNumber];
         internal CellType CellContents(int column, int row) => _state[column, row];
 
-        internal object Solve()
+        internal Solution Solve()
         {
-            return 1;
+            return SolveColumnsUsingTheColumnCounts();
+        }
+
+        private Solution SolveColumnsUsingTheColumnCounts()
+        {
+            for (int column = 0; column < NumberOfColumns; column++)
+            {
+                var unknownCellsInColumn = GetUnknownCellsInColumn(column);
+                var numberOfBoatsInColumn = GetUnknownBoatsInColumn(column).Count;
+                var remainingBoatsToFind = ColumnCount(column) - numberOfBoatsInColumn;
+
+                if (remainingBoatsToFind > 0 && remainingBoatsToFind == unknownCellsInColumn.Count)
+                {
+                    foreach (var row in unknownCellsInColumn)
+                    {
+                        _state[column, row] = CellType.UnknownBoatPart;
+                    }
+
+                    return new Solution { Description = "All remaining cells in this column contain boats" };
+                }
+
+                if (remainingBoatsToFind == 0 && unknownCellsInColumn.Count > 0)
+                {
+                    foreach (var row in unknownCellsInColumn)
+                    {
+                        _state[column, row] = CellType.Water;
+                    }
+
+                    return new Solution { Description = "All remaining cells in this column contain water" };
+                }
+            }
+
+            return null;
+        }
+
+        private List<int> GetUnknownCellsInColumn(int column)
+        {
+            var results = new List<int>();
+
+            for (int row = 0; row < NumberOfRows; row++)
+            {
+                if (_state[column, row] == CellType.Unknown)
+                {
+                    results.Add(row);
+                }
+            }
+
+            return results;
+        }
+
+        private List<int> GetUnknownBoatsInColumn(int column)
+        {
+            var results = new List<int>();
+
+            for (int row = 0; row < NumberOfRows; row++)
+            {
+                if (_state[column, row] != CellType.Unknown && _state[column, row] != CellType.Water)
+                {
+                    results.Add(row);
+                }
+            }
+
+            return results;
         }
     }
 }
