@@ -25,7 +25,7 @@ namespace BattleshipSolver
             this.Controls.Add(solveButton);
 
             var gameLoader = new LoadGameFromFile();
-            _game = gameLoader.Load("Games/Game1.txt").GetAwaiter().GetResult();
+            _game = gameLoader.Load("Games/Game2.txt").GetAwaiter().GetResult();
             _gameDrawer = new GameDrawer(_game);
             this.Paint += Form1_Paint;
         }

@@ -25,6 +25,11 @@ namespace BattleshipSolver
                     {
                         'M' => CellType.Water,
                         'S' => CellType.SouthEnd,
+                        'N' => CellType.NorthEnd,
+                        'W' => CellType.WestEnd,
+                        'E' => CellType.EastEnd,
+                        'R' => CellType.Round,
+                        '?' => CellType.UnknownBoatPart,
                         _ => CellType.Unknown,
                     };
                 }

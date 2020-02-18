@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="Games\Game2.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Games\Game1.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -102,7 +102,7 @@ namespace BattleshipSolver
                             set |= SetToWater(column - 1, row - 1);
                             set |= SetToWater(column, row - 1);
                             set |= SetToWater(column + 1, row - 1);
-                            set |= SetToWater(column + 1, row);
+                            set |= SetToWater(column - 1, row);
                             set |= SetToWater(column - 1, row + 1);
                             set |= SetToWater(column, row + 1);
                             set |= SetToWater(column + 1, row + 1);
@@ -111,7 +111,7 @@ namespace BattleshipSolver
                             set |= SetToWater(column - 1, row - 1);
                             set |= SetToWater(column, row - 1);
                             set |= SetToWater(column + 1, row - 1);
-                            set |= SetToWater(column - 1, row);
+                            set |= SetToWater(column + 1, row);
                             set |= SetToWater(column - 1, row + 1);
                             set |= SetToWater(column, row + 1);
                             set |= SetToWater(column + 1, row + 1);
@@ -219,13 +219,13 @@ namespace BattleshipSolver
                     {
                         if (column == 0 || _state[column - 1, row] == CellType.Water)
                         {
-                            _state[column, row] = CellType.EastEnd;
-                            return new Solution { Description = "Must be east end" };
+                            _state[column, row] = CellType.WestEnd;
+                            return new Solution { Description = "Must be west end" };
                         }
                         if (column == (NumberOfColumns - 1) || _state[column + 1, row] == CellType.Water)
                         {
-                            _state[column, row] = CellType.WestEnd;
-                            return new Solution { Description = "Must be west end" };
+                            _state[column, row] = CellType.EastEnd;
+                            return new Solution { Description = "Must be east end" };
                         }
 
                         if (column < (NumberOfColumns - 1) && IsHorizontal(_state[column + 1, row]) &&
