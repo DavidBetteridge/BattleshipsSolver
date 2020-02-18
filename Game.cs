@@ -61,6 +61,62 @@ namespace BattleshipSolver
             return solution;
         }
 
+        internal int LargestPossibleShipInRow(int row)
+        {
+            var largest = 0;
+            var currentChain = 0;
+            var unknownCount = 0;
+
+            for (int column = 0; column < NumberOfColumns; column++)
+            {
+                if (_state[column, row] == CellType.Unknown || _state[column, row] == CellType.UnknownBoatPart || IsHorizontal(_state[column, row]))
+                {
+                    currentChain++;
+                    if (_state[column, row] == CellType.Unknown) unknownCount++;
+                }
+                else if (currentChain > 0 && _state[column, row] == CellType.Water)
+                {
+                    if (currentChain > largest && unknownCount > 0) largest = currentChain;
+                    currentChain = 0;
+                }
+            }
+
+            if (unknownCount > 0)
+                largest = Math.Max(currentChain, largest);
+
+            largest = Math.Min(RowCount(row), largest);
+
+            return largest;
+        }
+
+        internal int LargestPossibleShipInColumn(int column)
+        {
+            var largest = 0;
+            var currentChain = 0;
+            var unknownCount = 0;
+
+            for (int row = 0; row < NumberOfRows; row++)
+            {
+                if (_state[column, row] == CellType.Unknown || _state[column, row] == CellType.UnknownBoatPart || IsVertical(_state[column, row]))
+                {
+                    currentChain++;
+                    if (_state[column, row] == CellType.Unknown) unknownCount++;
+                }
+                else if (currentChain > 0 && _state[column, row] == CellType.Water)
+                {
+                    if (currentChain > largest && unknownCount > 0) largest = currentChain;
+                    currentChain = 0;
+                }
+            }
+
+            if (unknownCount > 0)
+                largest = Math.Max(currentChain, largest);
+
+            largest = Math.Min(ColumnCount(column), largest);
+
+            return largest;
+        }
+
         private Solution FindDeadSquares()
         {
             bool SetToWater(int column, int row)
@@ -181,7 +237,7 @@ namespace BattleshipSolver
                             return new Solution { Description = "Must be vertical boat" };
                         }
 
-                        if (column > 0 && _state[column-1, row] != CellType.Water && _state[column-1, row] != CellType.Unknown)
+                        if (column > 0 && _state[column - 1, row] != CellType.Water && _state[column - 1, row] != CellType.Unknown)
                         {
                             _state[column, row] = CellType.UnknownHorizontalBoatPart;
                             return new Solution { Description = "Must be horizontal boat" };

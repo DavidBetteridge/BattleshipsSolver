@@ -25,6 +25,8 @@ namespace BattleshipSolver
             {
                 g.DrawString(_game.ColumnCount(column).ToString(), _symbolFont, Brushes.Black, column * CellSize, 0);
                 g.DrawString(_game.ColumnCount(column).ToString(), _symbolFont, Brushes.Black, column * CellSize, (_game.NumberOfRows+1) * CellSize);
+
+                g.DrawString(_game.LargestPossibleShipInColumn(column).ToString(), _symbolFont, Brushes.Red, column * CellSize, (_game.NumberOfRows+2) * CellSize);
             }
 
             g.ResetTransform();
@@ -34,6 +36,8 @@ namespace BattleshipSolver
             {
                 g.DrawString(_game.RowCount(row).ToString(), _symbolFont, Brushes.Black, 0, row * CellSize);
                 g.DrawString(_game.RowCount(row).ToString(), _symbolFont, Brushes.Black, (_game.NumberOfColumns + 1) * CellSize, row * CellSize);
+
+                g.DrawString(_game.LargestPossibleShipInRow(row).ToString(), _symbolFont, Brushes.Red, (_game.NumberOfColumns + 2) * CellSize, row * CellSize);
             }
 
             g.ResetTransform();
