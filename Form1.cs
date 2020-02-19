@@ -34,7 +34,7 @@ namespace BattleshipSolver
             this.Controls.Add(restartButton);
 
             var gameLoader = new LoadGameFromFile();
-            _game = gameLoader.Load("Games/Game2.txt").GetAwaiter().GetResult();
+            _game = gameLoader.Load("Games/Game3.txt").GetAwaiter().GetResult();
             _gameDrawer = new GameDrawer(_game);
             this.Paint += Form1_Paint;
         }
@@ -42,7 +42,7 @@ namespace BattleshipSolver
         private async void RestartButton_Click(object sender, EventArgs e)
         {
             var gameLoader = new LoadGameFromFile();
-            _game = await gameLoader.Load("Games/Game2.txt");
+            _game = await gameLoader.Load("Games/Game3.txt");
             _gameDrawer = new GameDrawer(_game);
 
             using var g = this.CreateGraphics();
