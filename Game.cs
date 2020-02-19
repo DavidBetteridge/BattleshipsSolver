@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace BattleshipSolver
@@ -9,6 +8,7 @@ namespace BattleshipSolver
         private readonly int[] _columnCounts;
         private readonly int[] _rowCounts;
         private readonly CellType[,] _state;
+        private readonly BoatsAndQuantity[] _boats;
 
         public enum CellType
         {
@@ -29,13 +29,14 @@ namespace BattleshipSolver
         public int NumberOfColumns { get; }
         public int NumberOfRows { get; }
 
-        public Game(int[] columnCounts, int[] rowCounts, CellType[,] initialState)
+        public Game(int[] columnCounts, int[] rowCounts, CellType[,] initialState, BoatsAndQuantity[] boats)
         {
             NumberOfColumns = initialState.GetUpperBound(0) + 1;
             NumberOfRows = initialState.GetUpperBound(1) + 1;
             _columnCounts = columnCounts;
             _rowCounts = rowCounts;
             _state = initialState;
+            _boats = boats;
         }
 
         internal int ColumnCount(int columnNumber) => _columnCounts[columnNumber];
@@ -58,65 +59,125 @@ namespace BattleshipSolver
             if (solution is null)
                 solution = GrowBoats();
 
+            if (solution is null)
+                solution = InsertLargestBoat();
+
             return solution;
         }
 
-        internal int LargestPossibleShipInRow(int row)
+        private Solution InsertLargestBoat()
         {
-            var largest = 0;
-            var currentChain = 0;
-            var unknownCount = 0;
+            var allChains = new List<Chain>();
+
+            for (int row = 0; row < NumberOfRows; row++)
+                allChains.AddRange(FindChainsForRow(row));
+
+            for (int column = 0; column < NumberOfColumns; column++)
+                allChains.AddRange(FindChainsForColumn(column));
+
+            foreach (var boatAndQuantity in _boats.OrderByDescending(b => b.Length))
+            {
+                var numberOfBoatsFoundOfThisLength = allChains.Where(c => c.IsCompleted && c.Length == boatAndQuantity.Length).Count();
+                if (boatAndQuantity.Quantity - numberOfBoatsFoundOfThisLength > 0)
+                {
+                    var gapsWhereThisBoatCouldFit = allChains.Where(c => !c.IsCompleted && c.Length == boatAndQuantity.Length);  //TODO allow for gaps between n and n*2
+                    if (gapsWhereThisBoatCouldFit.Count() == 1)
+                    {
+                        var gap = gapsWhereThisBoatCouldFit.First();
+                        if (gap.IsVertical)
+                        {
+                            _state[gap.Start.Column, gap.Start.Row] = CellType.NorthEnd;
+                            for (int row = gap.Start.Row+1; row < gap.End.Row; row++)
+                                _state[gap.Start.Column, row] = CellType.VerticalMiddle;
+                            _state[gap.End.Column, gap.End.Row] = CellType.SouthEnd;
+
+                            return new Solution { Description = $"Only place a boat of length {boatAndQuantity.Length} fits" };
+                        }
+                        else
+                        {
+                            _state[gap.Start.Column, gap.Start.Row] = CellType.WestEnd;
+                            for (int column = gap.Start.Column + 1; column < gap.End.Column; column++)
+                                _state[column, gap.Start.Row] = CellType.HorizontalMiddle;
+                            _state[gap.End.Column, gap.End.Row] = CellType.EastEnd;
+
+                            return new Solution { Description = $"Only place a boat of length {boatAndQuantity.Length} fits" };
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        internal List<Chain> FindChainsForRow(int row)
+        {
+            var result = new List<Chain>();
+            var currentChain = default(Chain);
 
             for (int column = 0; column < NumberOfColumns; column++)
             {
                 if (_state[column, row] == CellType.Unknown || _state[column, row] == CellType.UnknownBoatPart || IsHorizontal(_state[column, row]))
                 {
-                    currentChain++;
-                    if (_state[column, row] == CellType.Unknown) unknownCount++;
+                    if (currentChain is null)
+                    {
+                        currentChain = new Chain
+                        {
+                            Start = new CellLocation(column, row),
+                            IsCompleted = true,
+                            IsVertical = false,
+                        };
+                        result.Add(currentChain);
+                    }
+                    currentChain.Length++;
+                    if (_state[column, row] == CellType.Unknown || _state[column, row] == CellType.UnknownBoatPart) currentChain.IsCompleted = false;
                 }
-                else if (currentChain > 0 && _state[column, row] == CellType.Water)
+                else if (currentChain is object && (_state[column, row] == CellType.Water || _state[column, row] == CellType.Round || IsVertical(_state[column, row])))
                 {
-                    if (currentChain > largest && unknownCount > 0) largest = currentChain;
-                    currentChain = 0;
+                    currentChain.End = new CellLocation(column - 1, row);
+                    currentChain = null;
                 }
             }
 
-            if (unknownCount > 0)
-                largest = Math.Max(currentChain, largest);
+            if (currentChain is object)
+                currentChain.End = new CellLocation(NumberOfColumns - 1, row);
 
-            largest = Math.Min(RowCount(row), largest);
-
-            return largest;
+            return result;
         }
 
-        internal int LargestPossibleShipInColumn(int column)
+        internal List<Chain> FindChainsForColumn(int column)
         {
-            var largest = 0;
-            var currentChain = 0;
-            var unknownCount = 0;
+            var result = new List<Chain>();
+            var currentChain = default(Chain);
 
             for (int row = 0; row < NumberOfRows; row++)
             {
                 if (_state[column, row] == CellType.Unknown || _state[column, row] == CellType.UnknownBoatPart || IsVertical(_state[column, row]))
                 {
-                    currentChain++;
-                    if (_state[column, row] == CellType.Unknown) unknownCount++;
+                    if (currentChain is null)
+                    {
+                        currentChain = new Chain
+                        {
+                            Start = new CellLocation(column, row),
+                            IsCompleted = true,
+                            IsVertical = true,
+                        };
+                        result.Add(currentChain);
+                    }
+                    currentChain.Length++;
+                    if (_state[column, row] == CellType.Unknown || _state[column, row] == CellType.UnknownBoatPart) currentChain.IsCompleted = false;
                 }
-                else if (currentChain > 0 && _state[column, row] == CellType.Water)
+                else if (currentChain is object && (_state[column, row] == CellType.Water || _state[column, row] == CellType.Round || IsHorizontal(_state[column, row])))
                 {
-                    if (currentChain > largest && unknownCount > 0) largest = currentChain;
-                    currentChain = 0;
+                    currentChain.End = new CellLocation(column, row - 1);
+                    currentChain = null;
                 }
             }
 
-            if (unknownCount > 0)
-                largest = Math.Max(currentChain, largest);
+            if (currentChain is object)
+                currentChain.End = new CellLocation(column, NumberOfRows - 1);
 
-            largest = Math.Min(ColumnCount(column), largest);
-
-            return largest;
+            return result;
         }
-
         private Solution FindDeadSquares()
         {
             bool SetToWater(int column, int row)

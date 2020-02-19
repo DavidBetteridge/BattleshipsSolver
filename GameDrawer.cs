@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.Linq;
 using static BattleshipSolver.Game;
 
 namespace BattleshipSolver
@@ -19,14 +21,14 @@ namespace BattleshipSolver
 
         public void Draw(Graphics g)
         {
-            g.TranslateTransform(100 + (CellSize/2) - 15, 50);
+            g.TranslateTransform(100 + (CellSize / 2) - 15, 50);
 
             for (int column = 0; column < _game.NumberOfColumns; column++)
             {
                 g.DrawString(_game.ColumnCount(column).ToString(), _symbolFont, Brushes.Black, column * CellSize, 0);
-                g.DrawString(_game.ColumnCount(column).ToString(), _symbolFont, Brushes.Black, column * CellSize, (_game.NumberOfRows+1) * CellSize);
+                g.DrawString(_game.ColumnCount(column).ToString(), _symbolFont, Brushes.Black, column * CellSize, (_game.NumberOfRows + 1) * CellSize);
 
-                g.DrawString(_game.LargestPossibleShipInColumn(column).ToString(), _symbolFont, Brushes.Red, column * CellSize, (_game.NumberOfRows+2) * CellSize);
+                DrawChainForColumnInformation(g, column);
             }
 
             g.ResetTransform();
@@ -37,11 +39,19 @@ namespace BattleshipSolver
                 g.DrawString(_game.RowCount(row).ToString(), _symbolFont, Brushes.Black, 0, row * CellSize);
                 g.DrawString(_game.RowCount(row).ToString(), _symbolFont, Brushes.Black, (_game.NumberOfColumns + 1) * CellSize, row * CellSize);
 
-                g.DrawString(_game.LargestPossibleShipInRow(row).ToString(), _symbolFont, Brushes.Red, (_game.NumberOfColumns + 2) * CellSize, row * CellSize);
+                DrawChainForRowInformation(g, row);
             }
 
             g.ResetTransform();
             g.TranslateTransform(100, 100);
+
+            for (int column = 0; column < _game.NumberOfColumns; column++)
+            {
+                for (int row = 0; row < _game.NumberOfRows; row++)
+                {
+                    DrawSymbol(g, _game.CellContents(column, row), column, row, Brushes.Black);
+                }
+            }
 
             g.DrawRectangle(_borderPen, 0, 0, _game.NumberOfColumns * CellSize, _game.NumberOfRows * CellSize);
 
@@ -54,14 +64,27 @@ namespace BattleshipSolver
             {
                 g.DrawLine(Pens.Black, 0, row * CellSize, _game.NumberOfColumns * CellSize, row * CellSize);
             }
+        }
 
-            for (int column = 0; column < _game.NumberOfColumns; column++)
-            {
-                for (int row = 0; row < _game.NumberOfRows; row++)
-                {
-                    DrawSymbol(g, _game.CellContents(column, row), column, row, Brushes.Black);
-                }
-            }
+        private void DrawChainForRowInformation(Graphics g, int row)
+        {
+            var longestedChain = _game.FindChainsForRow(row).Where(chain => !chain.IsCompleted).OrderByDescending(chain => chain.Length).FirstOrDefault()?.Length ?? 0;
+            longestedChain = Math.Min(longestedChain, _game.RowCount(row));
+            g.DrawString(longestedChain.ToString(), _symbolFont, Brushes.Red, (_game.NumberOfColumns + 2) * CellSize, row * CellSize);
+
+            var c = _game.FindChainsForRow(row).Where(chain => chain.IsCompleted).Select(chain => chain.Length);
+            var boats = string.Join("/", c);
+            g.DrawString(boats, _symbolFont, Brushes.Green, (_game.NumberOfColumns + 3) * CellSize, row * CellSize);
+        }
+
+        private void DrawChainForColumnInformation(Graphics g, int column)
+        {
+            var longestedChain = _game.FindChainsForColumn(column).Where(chain => !chain.IsCompleted).OrderByDescending(chain => chain.Length).FirstOrDefault()?.Length ?? 0;
+            longestedChain = Math.Min(longestedChain, _game.ColumnCount(column));
+            g.DrawString(longestedChain.ToString(), _symbolFont, Brushes.Red, column * CellSize, (_game.NumberOfRows + 2) * CellSize);
+
+            var boats = string.Join("/", _game.FindChainsForColumn(column).Where(chain => chain.IsCompleted).Select(chain => chain.Length));
+            g.DrawString(boats, _symbolFont, Brushes.Green, column * CellSize, (_game.NumberOfRows + 3) * CellSize);
         }
 
         internal void DrawMove(Graphics g, Solution result)
@@ -90,22 +113,22 @@ namespace BattleshipSolver
                 case CellType.Unknown:
                     break;
                 case CellType.Water:
-                    g.FillRectangle(Brushes.Blue, x, y, CellSize, CellSize);
+                    g.FillRectangle(Brushes.DarkBlue, x, y, CellSize, CellSize);
                     break;
                 case CellType.SouthEnd:
                     DrawLetter(g, brush, x, y, "S");
                     break;
                 case CellType.NorthEnd:
-                    DrawLetter(g, brush, x, y, "N"); 
+                    DrawLetter(g, brush, x, y, "N");
                     break;
                 case CellType.WestEnd:
-                    DrawLetter(g, brush, x, y, "W"); 
+                    DrawLetter(g, brush, x, y, "W");
                     break;
                 case CellType.EastEnd:
-                    DrawLetter(g, brush, x, y, "E"); 
+                    DrawLetter(g, brush, x, y, "E");
                     break;
                 case CellType.VerticalMiddle:
-                    DrawLetter(g, brush, x, y, "V"); 
+                    DrawLetter(g, brush, x, y, "V");
                     break;
                 case CellType.HorizontalMiddle:
                     DrawLetter(g, brush, x, y, "H");

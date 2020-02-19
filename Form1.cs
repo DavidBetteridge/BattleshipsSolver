@@ -6,8 +6,8 @@ namespace BattleshipSolver
 {
     public partial class Form1 : Form
     {
-        private readonly Game _game;
-        private readonly GameDrawer _gameDrawer;
+        private Game _game;
+        private GameDrawer _gameDrawer;
         public Form1()
         {
             InitializeComponent();
@@ -24,10 +24,30 @@ namespace BattleshipSolver
             solveButton.Click += SolveButton_Click;
             this.Controls.Add(solveButton);
 
+            var restartButton = new Button
+            {
+                Text = "Restart",
+                Location = new Point(200,0),
+            };
+
+            restartButton.Click += RestartButton_Click;
+            this.Controls.Add(restartButton);
+
             var gameLoader = new LoadGameFromFile();
             _game = gameLoader.Load("Games/Game2.txt").GetAwaiter().GetResult();
             _gameDrawer = new GameDrawer(_game);
             this.Paint += Form1_Paint;
+        }
+
+        private async void RestartButton_Click(object sender, EventArgs e)
+        {
+            var gameLoader = new LoadGameFromFile();
+            _game = await gameLoader.Load("Games/Game2.txt");
+            _gameDrawer = new GameDrawer(_game);
+
+            using var g = this.CreateGraphics();
+            g.Clear(this.BackColor);
+            _gameDrawer.Draw(g);
         }
 
         private void SolveButton_Click(object sender, EventArgs e)

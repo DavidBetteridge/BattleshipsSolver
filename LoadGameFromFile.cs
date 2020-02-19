@@ -9,11 +9,13 @@ namespace BattleshipSolver
         public async Task<Game> Load(string filename)
         {
             var lines = await System.IO.File.ReadAllLinesAsync(filename).ConfigureAwait(false);
-            var numberOfColumns = lines[0].Length - 1;
-            var numberOfRows = lines.Length - 1;
+            var numberOfColumns = lines[1].Length - 1;
+            var numberOfRows = lines.Length - 2;
 
-            var columnCounts = lines[0].Skip(1).Select(x => int.Parse(x.ToString())).ToArray();
-            var rowCounts = lines.Skip(1).Select(l => int.Parse(l[0].ToString())).ToArray();
+            var boats = lines[0].Split(' ').Select(b => new BoatsAndQuantity { Quantity = int.Parse(b.Split('x')[0]), Length = int.Parse(b.Split('x')[1]) }).ToArray();
+
+            var columnCounts = lines[1].Skip(1).Select(x => int.Parse(x.ToString())).ToArray();
+            var rowCounts = lines.Skip(2).Select(l => int.Parse(l[0].ToString())).ToArray();
 
             var initialState = new CellType[numberOfColumns, numberOfRows];
 
@@ -21,7 +23,7 @@ namespace BattleshipSolver
             {
                 for (int row = 0; row < numberOfRows; row++)
                 {
-                    initialState[column, row] = lines[row + 1][column + 1] switch
+                    initialState[column, row] = lines[row + 2][column + 1] switch
                     {
                         'M' => CellType.Water,
                         'S' => CellType.SouthEnd,
@@ -35,7 +37,7 @@ namespace BattleshipSolver
                 }
             }
 
-            return new Game(columnCounts, rowCounts, initialState);
+            return new Game(columnCounts, rowCounts, initialState, boats);
         }
     }
 }
